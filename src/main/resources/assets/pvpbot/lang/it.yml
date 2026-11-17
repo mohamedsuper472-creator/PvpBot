@@ -1,0 +1,70 @@
+# PvpBot - Italiano.
+#
+# Non modificare questa copia: viene sostituita a ogni aggiornamento. Per cambiare una riga, metti
+# la stessa chiave in plugins/PvpBot/messages.yml. {0}, {1}... sono i valori inseriti.
+# I comandi in chat ("bot follow", "cancel"...) restano in inglese: sono quelli che i bot capiscono.
+
+# Risposte ai proprietari che danno ordini ai bot in chat ("bot follow", "bot status"...).
+chat:
+  attack-who: "Attaccare chi? Scrivi anche un nome, es. \"bot attack Cattivo\"."
+  cancelled: "{0} lascia perdere il bersaglio attuale."
+  following: "{0} ora ti segue."
+  free: "{0} libero di girare."
+  guarding: "{0} ora tiene questa posizione."
+  help: "Prova: \"bot follow\", \"bot guard\", \"bot stay\" (resta qui), \"bot stop\" (non si difende nemmeno), \"bot free\", \"bot attack <nome>\", \"bot cancel\" (smette di combattere chi ha davanti, senza fermarsi né smettere di seguirti), \"bot summon\", \"bot status\". Scrivi il nome di un bot per dare l'ordine solo a lui, es. \"{0} stay\" - altrimenti obbediscono tutti i tuoi bot qui. Si difendono sempre se qualcun altro li colpisce, a meno che non siano fermi."
+  hunting: "{0} ora dà la caccia a {1}."
+  not-found: "Non trovo {0}."
+  not-here-many: "I tuoi bot non sono qui adesso."
+  not-here-one: "Il tuo bot non è qui adesso."
+  state-away: "non è qui"
+  state-fighting: "combatte contro {0}"
+  state-following: "segue {0}"
+  state-free: "gira libero"
+  state-guarding: "fa la guardia a una posizione"
+  state-marching: "in marcia verso {0}"
+  state-paused: "in attesa"
+  staying: "{0} resta dove si trova - si difende comunque se colpito."
+  stopped: "{0} fermo del tutto - non si muove né si difende finché non gli dici altro."
+  summon-failed: "Non trovo {0} da teletrasportare - riprova tra un momento."
+  summon-wait: "Non ancora - aspetta {0}s prima di richiamarli."
+  summoned: "{0} teletrasportato da te."
+
+# Errori dei comandi.
+err:
+  no-bot: "Nessun bot di nome {0}."
+  no-bot-spawned: "Nessun bot di nome {0} è in gioco."
+  no-faction: "Nessuna fazione di nome {0}."
+  no-faction-members: "Nessuna fazione di nome {0}, oppure non ha membri."
+  no-faction-spawned: "Nessuna fazione di nome {0}, oppure nessun suo membro è in gioco."
+  no-kit: "Nessun kit di nome {0}."
+  no-overfaction: "Nessuna superfazione di nome {0}."
+  no-path: "Nessun percorso di nome \"{0}\"."
+  no-permission: "Non puoi usarlo."
+  no-player: "Nessun giocatore di nome {0} è online."
+  no-preset: "Nessun preset di nome \"{0}\"."
+  no-script: "Nessuno script di nome \"{0}\"."
+  no-technique: "Nessuna tecnica di nome {0}."
+  wrong-version: "Questo jar di PvpBot non è adatto alla versione di Minecraft del server, quindi i bot non possono entrare. Supportate: {0}. Dettagli in console."
+
+# Domande dei menu a cui si risponde in chat.
+prompt:
+  ask: "{0} - scrivilo in chat entro un minuto, oppure \"cancel\"."
+  bot-name: "Dai un nome al bot"
+  cancelled: "Annullato."
+  faction-name: "Dai un nome alla nuova fazione"
+  faction-skin: "Di chi deve essere la skin di {0} (un nome account Minecraft)"
+  kit-name: "Dai un nome al nuovo kit"
+  save-kit: "Dai un nome al kit in cui salvare l'equipaggiamento di {0}"
+
+# /pvpbot stats.
+stats:
+  everyone: "tutti"
+  line: "{0}{1}: {2} uccisioni, {3} morti (K/D {4}), {5} di precisione ({6}/{7} colpi), {8} colpi d'arco, {9} danni inflitti, {10} subiti"
+  no-stats: "Nessuna statistica per {0}."
+  none-yet: "Ancora nessuno scontro con un bot."
+  reset: "Statistiche azzerate per {0}."
+  top: "Primi {0} per {1}:"
+
+# L'avviso di aggiornamento che gli admin vedono entrando.
+update:
+  available: "È uscito PvpBot {0} (questo server ha la {1}) - {2}"

@@ -1,0 +1,15 @@
+# PvpBot - your own words.
+#
+# Every line PvpBot says comes from the language picked in config.yml (plugin.language: en or it).
+# To change one, copy its key here from the language list and write your version - only the lines
+# you put here change, so updates never overwrite them. {0}, {1}... are the values filled in.
+# /pvpbot reload picks up changes.
+#
+# The full list, with the English: https://github.com/Nantag/Plugins_Backup/blob/master/pvpbot-paper/src/main/resources/lang/en.yml
+#
+# Examples:
+#
+# chat:
+#   following: "{0} is on your six."
+# err:
+#   no-bot: "There's no bot called {0} - /pvpbot list shows them all."

@@ -1,0 +1,70 @@
+# PvpBot - English (the built-in words).
+#
+# Do not edit this copy: it is replaced with every update. To change a line, put the same key in
+# plugins/PvpBot/messages.yml. {0}, {1}... are the values filled in.
+
+# Replies to owners giving their bots orders in chat ("bot follow", "bot status"...).
+chat:
+  attack-who: "Attack who? Say a name too, e.g. \"bot attack Villain\"."
+  cancelled: "{0} standing down from their current target."
+  following: "{0} now following you."
+  free: "{0} free to roam."
+  guarding: "{0} now holding this position."
+  help: "Try: \"bot follow\", \"bot guard\", \"bot stay\" (hold this spot), \"bot stop\" (won't even fight back), \"bot free\", \"bot attack <name>\", \"bot cancel\" (stand down from whatever it's fighting, without stopping or unfollowing it), \"bot summon\", \"bot status\". Name one bot to single it out, e.g. \"{0} stay\" - otherwise every bot of yours here obeys at once. They always fight back if someone else hits them, unless stopped."
+  hunting: "{0} now hunting {1}."
+  not-found: "Could not find {0}."
+  not-here-many: "Your bots aren't here right now."
+  not-here-one: "Your bot isn't here right now."
+  state-away: "not here"
+  state-fighting: "fighting {0}"
+  state-following: "following {0}"
+  state-free: "roaming free"
+  state-guarding: "guarding a position"
+  state-marching: "marching to {0}"
+  state-paused: "standing by"
+  staying: "{0} holding where they stand - they still fight back if hit."
+  stopped: "{0} stopped completely - won't move or fight back until told otherwise."
+  summon-failed: "Could not find {0} to teleport - try again in a moment."
+  summon-wait: "Not yet - wait {0}s before summoning again."
+  summoned: "{0} teleported to you."
+
+# Command errors.
+err:
+  no-bot: "No bot named {0}."
+  no-bot-spawned: "No bot named {0} is spawned."
+  no-faction: "No faction named {0}."
+  no-faction-members: "No faction named {0}, or it has no members."
+  no-faction-spawned: "No faction named {0}, or it has no spawned members."
+  no-kit: "No kit named {0}."
+  no-overfaction: "No overfaction named {0}."
+  no-path: "No path named \"{0}\"."
+  no-permission: "You cannot use that."
+  no-player: "No player named {0} is online."
+  no-preset: "No preset named \"{0}\"."
+  no-script: "No script named \"{0}\"."
+  no-technique: "No technique named {0}."
+  wrong-version: "This PvpBot jar does not fit this server's Minecraft version, so bots cannot spawn. Supported: {0}. The console has the details."
+
+# Menu questions answered in chat.
+prompt:
+  ask: "{0} - type it in chat within a minute, or \"cancel\"."
+  bot-name: "Name the bot"
+  cancelled: "Cancelled."
+  faction-name: "Name the new faction"
+  faction-skin: "Whose skin should {0} wear (a Minecraft account name)"
+  kit-name: "Name the new kit"
+  save-kit: "Name the kit to save {0}'s gear as"
+
+# /pvpbot stats.
+stats:
+  everyone: "everyone"
+  line: "{0}{1}: {2} kills, {3} deaths (K/D {4}), {5} accuracy ({6}/{7} swings), {8} bow hits, {9} dealt, {10} taken"
+  no-stats: "No stats for {0}."
+  none-yet: "No fights with a bot yet."
+  reset: "Stats reset for {0}."
+  top: "Top {0} by {1}:"
+
+# The update notice admins see on joining.
+update:
+  available: "PvpBot {0} is out (this server runs {1}) - {2}"
+

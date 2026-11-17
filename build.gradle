@@ -1,0 +1,15 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+}
+version = project.mod_version
+group = 'com.stashes.pvpbot'
+base { archivesName = 'pvpbot-fabric' }
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    // 1.21.11 is the last obfuscated release: Mojang mappings match the original NMS names
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
+java { withSourcesJar() }

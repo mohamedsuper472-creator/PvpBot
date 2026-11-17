@@ -1,0 +1,1051 @@
+# ============================================================================
+#  PvpBot - human-like PvP bots
+#  New here? Pick a feel with /pvpbot preset <easy|normal|hard|expert>, then
+#  /pvpbot menu for everything else. Every setting below has a menu button too.
+# ============================================================================
+
+plugin:
+  # Anonymous usage numbers through bStats (how many servers, versions, bots) - it is
+  # how the plugin knows what to work on. Also off if plugins/bStats/config.yml says so.
+  metrics: true
+  # Tells you in the console, and admins as they join, when a newer PvpBot is out.
+  update-check: true
+  # The language PvpBot talks in: en or it. Change single lines in messages.yml.
+  language: en
+
+general:
+  # How often (in ticks) to re-run auto-equip. Combat itself runs every tick.
+  check-interval: 20
+  # Re-spawn the bots that were online when the server stopped.
+  bots-relog: true
+  # Bots are real players with no client, so they can never type /login. Login
+  # plugins therefore hold them un-authenticated forever, which blocks their
+  # movement, damage, projectiles and inventory - a bot that can only hop on the
+  # spot is the usual symptom. This registers each bot in the login plugin's own
+  # session list so it treats them as normal players. Nothing changes for real
+  # players. Currently understands LoginTo; harmless if no login plugin present.
+  auth-autologin: true
+  # Also clear the invulnerable flag, for plugins that protect via that instead.
+  force-vulnerable: true
+  # Last resort if the above is not enough: un-cancel any damage event involving
+  # a bot, overriding whatever plugin blocked it. This also overrides legitimate
+  # protection (safe zones, PvP-off regions), so leave it off unless
+  # /pvpbot diagnose shows damage is being cancelled by something else.
+  bypass-damage-protection: false
+  # Bots drop what they carried, and their XP, when they die. false: nothing drops - an arena's kits stay in the
+  # arena with no Curse of Vanishing needed. A faction can set it on its own (its profile), e.g. only the arena bots.
+  drop-items: true
+  # Ticks between target sweeps. Scanning nearby entities is by far the most
+  # expensive thing a bot does, so this is the dial to turn if a large crowd
+  # starts to stutter - 10 is smooth, 20 halves the cost again. Bots still
+  # re-scan instantly when their target dies or leaves, so reactions stay sharp.
+  target-scan-interval: 10
+
+combat:
+  # Hunt the nearest valid enemy with no command needed.
+  auto-target: true
+  # Both of these narrow what auto-target picks up. Neither affects being ordered
+  # to attack, revenge, or a faction leader's call to arms - those are explicit.
+  #   target-players: false      -> bots ignore players entirely unless provoked
+  #   target-passive-mobs: true  -> bots also hunt cows, villagers and the like
+  target-players: true
+  target-passive-mobs: false
+  # Fight back against whoever hit us last (for 30s).
+  revenge: true
+  # Let bots hit each other / their own side.
+  friendly-fire: false
+  # Whether unaffiliated bots start fights with each other on their own. Off by
+  # default so a yard full of bots stays calm - /pvpbot fight and faction wars
+  # still work either way, since those are explicit orders.
+  bot-vs-bot: false
+  # Attack players in creative/spectator or otherwise invulnerable.
+  attack-invincible: false
+  # Furthest a bot will look for a target, in blocks.
+  max-target-distance: 32.0
+  # How close a bot must be to swing, measured as vanilla measures reach: from the bot's eyes
+  # to the nearest point of the target's hitbox. 3.0 is exactly a player's reach.
+  melee-range: 3.0
+  # The distance a bot tries to hold once in melee. Inside this it eases back and
+  # circles instead of pushing forward, which is what stops bots ending up stood
+  # inside their target. Raise it for more cautious, spaced-out duels.
+  melee-standoff: 2.2
+  # Ticks between swings (12 ~ a fully charged sword).
+  attack-cooldown: 12
+  # Percent chance to whiff on purpose, to make bots beatable. 0 = never miss.
+  miss-chance: 10
+  # Simulated connection latency in ms - delays when a decided attack actually
+  # lands, the same round trip a real player's client has. 0 means a bot's
+  # attacks land the instant they're decided, which no real connection actually
+  # does; 50-150 plays like a real opponent.
+  ping-millis: 50
+  # Degrees a bot may turn per tick. Instant snap-aim is the single most obvious
+  # tell that something is a bot - a real player's aim swings, overshoots and lags
+  # behind a strafing target. 180 restores the old snap. 30 is brisk but human.
+  turn-speed: 30.0
+  # Percent of the time a mace carrier fights with an ordinary weapon instead of going
+  # for a smash - decided for a few seconds at a time. Between smashes it goes back to a
+  # sword regardless; this dial is about how often it commits to the mace play. A smash
+  # needs a wind charge to get up (offhand or bag; Wind Burst keeps it up), so a bot with
+  # no charges fights with the mace as an ordinary weapon when it picks it - crits, and
+  # Breach if it has it. Raise it for less mace, lower it for more.
+  special-weapon-melee-chance: 35
+  # Percent of raised shields a bot actually reacts to by swapping to an axe.
+  # Reacting every single time is reading inputs rather than responding to them.
+  shield-disable-chance: 70
+  # What a bot does about a mace coming down on it: shield, get out of the way, or
+  # take it. Anything left over after these two is "take it".
+  mace-defence-shield: 55
+  mace-defence-flee: 20
+  # Percent of fights against a mace user where the bot puts a totem in the offhand and
+  # keeps it there instead of using a shield. Decided once per fight, not per smash, so it
+  # reads as a choice: some bots stay with the shield, some go totem. A bot with no totem
+  # always uses the shield. A totem-bot splits what would have been its shield share
+  # between dodging and taking the hit, in the same ratio as the two settings above.
+  mace-totem-chance: 35
+  # Extra reach on a smash, on top of melee-range. A cheat - no player can do it,
+  # since bot.attack() is called directly and vanilla's own client-side reach
+  # check never sees it - so it is 0, a player's reach, unless you want it.
+  mace-range-bonus: 0.0
+  # Throw a pearl on a high arc, then pop a wind charge on it mid-flight. Pearls
+  # take explosion knockback like any entity, so the blast launches the pearl -
+  # and so the eventual teleport - far higher than self-launching with a wind
+  # charge ever reaches. The teleport itself is entirely vanilla; this only
+  # throws the two items and waits. Needs a pearl AND a wind charge; falls back
+  # to the ordinary jump(+wind charge) launch without either.
+  mace-pearl-launch: false
+  # Attribute swapping: switching hotbar slot and attacking in the same tick
+  # briefly combines the enchantments of the item just left with the attributes
+  # of the one now in hand. A bot owns the tick outright, so this is a few
+  # statements rather than a frame-perfect macro. Master switch, then the three
+  # combos it enables (the master switch is off by default - the sweaty preset
+  # turns it on):
+  attribute-swap: false
+  #   Breach swap  - swing a sword carrying the mace's Breach/Density enchants,
+  #                  at the sword's own much faster pace.
+  breach-swap: true
+  #   Mace stun    - axe to break a raised shield, mace straight after without
+  #                  waiting for the recharge, landing both.
+  mace-stun: true
+  #   Spear lunge  - chain spear jabs past their cooldown to close distance
+  #                  quickly (needs the Lunge enchant to actually dash).
+  spear-lunge: true
+  # Ticks between swap combos. This is the real rate limit - every one of them
+  # deliberately skips the normal attack-cooldown gate, since skipping that
+  # recharge is the whole point.
+  swap-cooldown: 30
+  # Percent chance to hesitate or outright fumble a clutch action - grabbing a
+  # totem, healing, blocking, escaping a web. Most mistakes are a short freeze;
+  # some are a full panic that locks that action out for a moment, so a bot can
+  # genuinely die with a totem still in its bag. 0 = flawless, inhuman.
+  mistake-chance: 12
+  # A faction can have one leader, a bot or a real player:
+  #     /pvpbot faction leader bandits Steve
+  # Whoever the leader swings at, and whoever swings at the leader, the whole
+  # faction turns on for this many seconds. The target is revealed to every
+  # member the moment the order lands - the leader has just told them where it
+  # is - but once it breaks contact they have to find it again like anything
+  # else. Allies are never rallied against, or one stray splash potion would
+  # start a civil war. 0 disables it.
+  leader-call-seconds: 30
+  # How long a bot sizes up a player it has noticed on its own before attacking,
+  # in ticks (20 = 1 second): it stops and looks at them first. Each player it
+  # notices rolls between this and half as long again. Only for fights the bot
+  # picks itself - being hit, an order (/pvpbot attack), a faction war or a
+  # leader's call are answered at once, and a bot already fighting switches
+  # targets without the pause. 0 = attack on sight.
+  reaction-ticks: 30
+  # Seconds after a bot spawns before it picks a fight with a player on its own,
+  # so it does not turn on whoever just spawned it. Same exceptions as above.
+  spawn-grace: 5
+  # How human a bot's hands are, 0-100: how fast it reacts to what it sees, how
+  # well it times things and how straight it aims. Every timed move goes through
+  # it - smash and e-mace swings, crit hops, the axe for a shield, swap combos,
+  # the shield against an incoming smash, bow shots, pearls, carts. Lower is
+  # sloppier: slower reads, swings further off the right tick, wider shots, more
+  # fumbled combos. Nothing is frame-perfect even at 100 - reactions stay those
+  # of a good player (150-250 ms) and timing still slips a tick either way - so
+  # there is always a gap to play around.
+  skill: 50
+  # Use the mace: gain height with a wind charge and slam down. Without a charge there is no
+  # way to get enough height for a smash, so the bot just fights with it as an ordinary weapon.
+  mace: true
+  # Elytra mace ("e-mace"): rocket up, dive at the target and smash without landing. Java
+  # counts no smash while gliding, so - like a player's elytra swap - the glide drops for the
+  # swing and picks straight back up. Needs an elytra (worn or carried) and a mace, plus
+  # plain rockets (ones with a firework star would blow up on the bot) to climb from the
+  # ground: two passes a flight at most, then a rest of 9-14 s. Without rockets it works from
+  # height instead: thrown up by a Wind Burst mace (or a wind charge, a pearl, a drop) with the
+  # target out of reach of a straight fall, the bot puts the elytra on in the air, glides
+  # toward them and closes the wings over them for a full-height smash - and goes round again
+  # if Wind Burst throws it back up. Off by default; the sweaty preset turns it on.
+  elytra-mace: false
+  # Blocks above the target to climb before diving. Every block fallen is mace damage:
+  # 20 is a heavy hit, 30+ one-shots most armour with Density.
+  elytra-mace-height: 20
+  # Cart PvP: a Flame arrow, then a rail and a TNT minecart in its path - the cart blows up the
+  # instant the arrow hits it. Needs a Flame bow, arrows, a rail and a TNT minecart. The blast
+  # hurts whoever set it off too, so a bot only carts when the numbers work: see below.
+  # Places rails, so it is also off whenever building.enabled is. Off by default; the
+  # sweaty preset turns it on.
+  cart-pvp: false
+  # Most damage (after armour, on an average roll of the blast) a bot accepts from its own cart.
+  # It never risks a roll that could kill it unless it holds a totem. In plain Protection the
+  # arrow-first play from placing range costs more than this, so the bot sets the cart down
+  # first and pops it from a few steps back instead; Blast Protection lets it shoot first.
+  cart-max-self-damage: 10.0
+  # Ticks between cart plays.
+  cart-cooldown: 80
+  # Jump before swinging so hits land as criticals, like a real PvPer.
+  crits: true
+  # Switch to an axe against a blocking enemy, which breaks their shield.
+  shield-disable: true
+
+movement:
+  # Jump constantly while chasing, like a real PvPer.
+  bhop: true
+  # Movement speed multiplier.
+  speed: 1.0
+  # Walk around aimlessly when there is nothing to fight.
+  wander: true
+  # Base distance a follower holds from whoever it is escorting (/pvpbot follow).
+  # A faction told to follow spreads around the leader on its own, stepping out a
+  # ring every few bots, so a large group does not pile onto one block.
+  follow-distance: 3.5
+
+utility:
+  # Swap to the best armour/weapon carried.
+  auto-equip: true
+  # A short pause before a panic totem reaches the offhand. Instant swapping is
+  # the most-cited "that's a bot" moment in recordings. Unlike mistake-chance this
+  # is a delay, not a chance of failing outright.
+  totem-delay-ticks: 10
+  # Grab a totem when close to death. Bots do NOT hold one permanently - the
+  # offhand stays free for a shield until they are actually in danger, and the
+  # swap can be fumbled (see mistake-chance).
+  auto-totem: true
+  totem-health: 8.0
+  # Back off when low.
+  retreat: true
+  # Health (in half-hearts, 20 = full) below which a bot retreats.
+  retreat-health: 6.0
+  # Where it heals once it has broken off: it makes for about heal-distance from them
+  # (each retreat rolls its own, somewhere around it), then stays put - a sidestep now
+  # and then - until they come closer than heal-distance-min (it backs off again) or
+  # drift past heal-distance-max (it closes back in). Not one exact distance held to the
+  # block, which looked like a bot on a string.
+  heal-distance-min: 8.0
+  heal-distance: 16.0
+  heal-distance-max: 32.0
+  # Eat when hungry. Bots back away slowly while eating rather than standing
+  # still, and cannot sprint mid-bite - same as a player.
+  auto-food: true
+  # Food level (out of 20) below which a bot eats.
+  food-threshold: 16
+  # Raise a shield when hurt and the enemy is in range.
+  auto-shield: true
+  shield-health: 8.0
+  # Drink/throw healing potions and eat gapples when low.
+  auto-potion: true
+  potion-health: 10.0
+  # Drink strength / speed / fire resistance before engaging. Only done with
+  # room to spare - never inside melee range, where it would be free hits.
+  buff-potions: true
+  # Ender pearls: bail out when nearly dead (or webbed with no water to escape
+  # with), and chase down anyone sprinting away so running is not a free out.
+  pearls: true
+  pearl-escape-health: 5.0
+  pearl-chase-distance: 14.0
+  pearl-cooldown: 120
+  # Drop cobwebs on a nearby enemy to pin them. Kept deliberately hard: the bot must
+  # be within cobweb-range with line of sight, and waits cobweb-cooldown between webs.
+  # Off by default; the sweaty preset turns it on.
+  cobwebs: false
+  cobweb-range: 3.5
+  # Ticks between webs from one bot, and between webs from ANY bot. The per-bot
+  # figure alone is no defence against a squad: ten bots each waiting their own
+  # two seconds still means a web every fifth of a second, and being permanently
+  # stuck is not a fight. The global one is what stops webbing scaling with how
+  # many bots you spawned. 0 disables it.
+  cobweb-cooldown: 160
+  cobweb-global-cooldown: 60
+  # Scoop up water an enemy places (denies MLGs and safe spots). The bot waits
+  # drain-delay ticks before reacting, so it is beatable rather than instant.
+  drain: true
+  drain-delay: 20
+  # A bot caught in a cobweb that is carrying a water bucket pours it to wash the web out.
+  # web-escape-delay is how long it takes to notice, switch to the bucket and act (each web
+  # rolls between this and 50% more); web-escape-fumble-chance is the percent of attempts it
+  # botches (wrong click, mis-aimed pour), losing another 10-30 ticks before it can try again.
+  # Without these a webbed bot poured on the very next tick, every time, which made a
+  # cobweb useless against anyone with a bucket. 0 and 0 restores that.
+  web-escape-delay: 15
+  web-escape-fumble-chance: 35
+  # The MLG. A bot falling far enough to hurt itself looks down, finds where it
+  # is going to land, and drops a bucket of water on the spot - then scoops it
+  # back up once it is down. Subject to mistake-chance, so a bot really can miss
+  # the clutch and splatter.
+  #
+  # Never fires on a mace smash (that fall is the attack) or on a drop it would
+  # walk away from anyway. The window is the number of blocks above the ground
+  # the water goes down; it widens automatically with falling speed, since near
+  # terminal velocity a bot covers several blocks in a single tick.
+  water-clutch: true
+  water-clutch-min-fall: 5.0
+  water-clutch-window: 5.0
+  water-clutch-pickup: true
+
+# A bot handed to a player (/pvpbot owner set) is put away while its owner is
+# offline: parked high above this world's spawn, paused, until the owner says
+# "bot summon". If no world by this name is loaded the bot is simply left
+# where it is, and the console says so.
+companions:
+  holding-world: test_world
+
+# ============================================================================
+#  What bots are allowed to do to the world.
+#
+#  Deliberately narrow. Bots can place blocks to bridge a gap or tower toward
+#  something above them, and can dig through SOFT NATURAL cover only - dirt,
+#  sand, gravel, clay, leaves, undergrowth, webs. They will never break stone,
+#  ore, anything player-made, or anything holding items, so a bot cannot mine
+#  its way into a build.
+#
+#  Every block change fires the same event a player's would, so WorldGuard,
+#  GriefPrevention, claim plugins and block loggers all see it and can refuse
+#  it. Set enabled: false to freeze bots out of the world entirely.
+# ============================================================================
+building:
+  enabled: true
+  # Place a block to cross a gap instead of taking a running jump at it.
+  bridge: true
+  # Tower up toward a target that is above and otherwise unreachable.
+  pillar: true
+  max-pillar: 6
+  # Dig through soft natural cover directly in the way.
+  clear-soft-blocks: true
+  # Ticks between block actions, and the most blocks one bot may place+break
+  # per minute. The budget is the backstop: it bounds how much a bot that gets
+  # into a bad spot can rearrange while nobody is watching.
+  cooldown: 6
+  budget: 64
+  # Extra materials bots may break, by name. Add STONE/NETHERRACK here if you
+  # want real tunnelling - be aware that is exactly the behaviour the soft-block
+  # whitelist exists to prevent.
+  extra-breakable: []
+
+# ============================================================================
+#  What bots are allowed to know.
+#
+#  Without this a bot knows about every hostile inside max-target-distance
+#  through any amount of rock, so raising that range sends bots off after
+#  zombies in caves under their feet. With it on, nothing is a target until the
+#  bot has a reason to know it exists: a clear line of sight, standing right on
+#  top of it, or being told (/pvpbot attack, /pvpbot fight) or hit.
+#
+#  The multipliers are what let players sneak. They scale how far off a player
+#  is noticed from, and only apply to players - a mob is not sneaking.
+# ============================================================================
+detection:
+  # Turn this off to go back to the old plain-radius sweep.
+  enabled: true
+  # Inside this many blocks a bot notices you regardless of line of sight -
+  # at arm's length you are heard and bumped into, not seen.
+  touch-radius: 3.0
+  # How long a spotted target stays known after it breaks line of sight. Stops
+  # a fight restarting every time someone steps behind a tree. 20 = 1 second.
+  memory-ticks: 100
+  # Notice range against an invisible player, as a fraction of the usual.
+  invisible-multiplier: 0.15
+  # ...against a crouching player.
+  sneaking-multiplier: 0.5
+  # ...against one wearing armour, and one wearing none.
+  armoured-multiplier: 1.0
+  unarmoured-multiplier: 0.7
+
+ranged:
+  # Use a bow/crossbow when the enemy is far enough away. A carried crossbow is
+  # preferred over a bow, since it keeps its charge between shots.
+  enabled: true
+  # Closer than this and the bot puts the bow away and closes to melee.
+  min-range: 6.0
+  # The distance the bot tries to hold while shooting - it backs off when the
+  # target gets nearer than this, and closes when they run further.
+  optimal-range: 12.0
+  # Ticks to hold the draw before loosing (20 = fully charged).
+  bow-min-draw-ticks: 18
+  # Lead the shot by the target's movement and arrow drop, instead of aiming
+  # straight at them. Turn off to make bots trail behind strafing players.
+  arrow-prediction: true
+  # Arrow pacing. Bots used to redraw the instant an arrow landed and never stop, one shot
+  # every ~1.1 seconds for the whole fight. Now: a volley of 1 to volley-size arrows (rolled
+  # per volley), a shot-gap between each (plus up to 50% random), then a rest where the bot
+  # holds fire while the bot repositions. Set volley-size 20 and rest-ticks 0
+  # for something close to the old behaviour.
+  shot-gap: 25
+  volley-size: 3
+  rest-ticks: 80
+
+# ============================================================================
+#  Difficulty - skill split into one knob per part of it.
+#
+#     /pvpbot difficulty                      list the knobs (and the nearest preset)
+#     /pvpbot difficulty preset hard          easy|medium|hard|expert|professional|perfect
+#     /pvpbot difficulty aim 90               one knob
+#     /pvpbot difficulty bot <bot> ...        one bot's own knobs (list|preset|clear|<knob> <value>)
+#     /pvpbot difficulty faction <f> ...      a faction's knobs
+#
+#  A bot's own knobs beat its faction's, which beat these. -1 on a 0-100 knob
+#  means "follow skill" - so with everything at -1, skill alone decides, as it
+#  always has. miss-chance, mistake-chance, cart-cooldown and the web delays
+#  above count as knobs too, and presets set them.
+# ============================================================================
+difficulty:
+  # How straight it aims: swings, pearls, wind charges, arrows.
+  aim: -1
+  # How fast it responds to anything new.
+  reaction: -1
+  # How close to the ideal tick its crits, swings and smashes land.
+  crit-timing: -1
+  # How often the hard techniques (swap combos, pearl catches, dives) come off.
+  technique: -1
+  # How well it keeps its aim on a moving target mid-technique.
+  tracking: -1
+  # Water-bucket clutch success rate, percent (-1 = follow mistake-chance).
+  clutch: -1
+  # How fast it notices your raised shield and axes it (-1 = follow reaction).
+  shield-disable-speed: -1
+  # Attack charge, percent, it waits for before the axe hit on a shield.
+  shield-charge: 0
+  # How wide it circles you, in degrees off the straight line (22 = as always).
+  strafe: 22
+  # Tenths of swings that give up full reach and wait to be a bit closer.
+  reach-flips: 0
+  # Seconds at least between two healing potions or gapples.
+  potion-gap: 2.0
+  # Percent of cart chances it lets go by.
+  cart-skip: 0
+  # Elytra-mace skill, 1 (easy) to 5 (professional); 0 follows the knobs above.
+  elytra-mace-level: 0
+  # Percent of raised shields it goes for the axe-then-mace stun slam on.
+  stun-slam-chance: 100
+
+# ============================================================================
+#  Playstyle - what a bot wants, rather than how well it plays.
+#
+#     default     the stock balance
+#     aggressive  commits harder, disengages later, takes more risk for damage
+#     safe        values staying alive: earlier heals, pearls out of combos
+#     defensive   stands its ground: blocks, punishes, never chases far or backs off
+#     balanced    between default and safe
+#     adaptive    aggressive when well ahead on health, safe when well behind
+#
+#     /pvpbot playstyle <style> <bots>        one or more bots (kept by name)
+#     /pvpbot playstyle faction <f> <style>   a whole faction
+#     /pvpbot randomplaystyle <bots>          rolled per bot, by the weights below
+# ============================================================================
+behaviour:
+  playstyle: default
+  # The opening: a bot walks a new opponent down the way a player does - at a
+  # point beside them that drifts side to side, pausing now and then, arcing in
+  # over the last few blocks and only sprinting near the end. From the first hit
+  # either way it fights as always. Mace, spear, elytra and trident kits skip it
+  # (their opening is the dive or the dash), and so does catching someone mid-bite.
+  opening: true
+
+# ============================================================================
+#  Staying alive mid-fight.
+# ============================================================================
+survival:
+  # advanced: a bot that needs to heal with someone on top of it buys the gap
+  # first - a knockback hit, a web on them, or a short ten-block pearl - then
+  # eats or drinks. old: heals where it stands (or retreats), as before.
+  healing: advanced
+  # What stays in the off-hand. auto: shield while healthy, totem when low
+  # (totem-health). totem: a totem always. shield: a shield until
+  # offhand-totem-hearts, then a totem.
+  offhand: auto
+  offhand-totem-hearts: 4.0
+  # A totem in the main hand while a mace is about to land and the off-hand has none.
+  mace-totem: true
+  # Being chained: answer with a crit, and pearl out once the exchange is clearly lost.
+  combo-answers: true
+  # At three hunger bars it stops to eat whatever it is doing, best food first.
+  hunger-stop: true
+
+# ============================================================================
+#  Cobwebs - on top of utility.cobwebs (the direct web on someone in reach).
+# ============================================================================
+webs:
+  # Web the ground someone closing in is about to walk onto.
+  web-prediction: false
+  # With a wall behind them: hit them into it and web the block their head is in.
+  head-web: false
+  # Half its webs: a knockback hit first, then the web where they land.
+  hit-web: false
+  # Percent of chances it takes to scoop up someone's escape water.
+  web-drain-chance: 100
+  # Cut itself out: shears first (it keeps the web), a sword once water and a
+  # pearl are not options.
+  web-cut: true
+
+escapes:
+  # Webbed and boxed in: eat a chorus fruit to teleport out.
+  chorus-escape: false
+  # Burning with no fire resistance: water on its own feet, then the water back.
+  fire-escape: false
+
+# ============================================================================
+#  The mace and spear techniques - 27 moves, each a setting. Difficulty is how
+#  well a bot plays; techniques are which moves it knows at all. The ones bots
+#  already used start on; anything new is off until you switch it on.
+#
+#     /pvpbot techniques                       list them, on or off
+#     /pvpbot techniques <name> on|off         (or a faction's / a bot's own)
+#
+#  Two of the 27 live under combat: breach-swap and mace-stun (the stun slam).
+#  ground-backstab and mace-stun are alternatives: turning one on in a menu or
+#  command turns the other off.
+# ============================================================================
+techniques:
+  # -- core swaps
+  mace-swap: true             # the mace out for smashes, the weapon between (off: mace stays out)
+  spear-mace-swap: false      # the hit after a spear lunge comes off the mace
+  sword-windburst-swap: false # no effect any more: a smash is always the mace
+  spear-reach-swap: false     # just past sword reach: the spear's 4.5-block jab
+  # -- fundamentals
+  windcharge-mace: true       # a wind charge at its own feet for a smash
+  wc-crouch-boost: false      # the launch charge nearly straight down: more height
+  cooldown-discipline: true   # never throws a charge still on its cooldown
+  hit-preference: true        # holds a flat hit for a smash that is moments away
+  hotbar-shield-tracking: false # an axe up to the hotbar while they carry a shield
+  elytra-wc-boost: false      # out of rockets mid-climb: a wind charge for height
+  # -- movement (the spear dash needs a spear and a wind charge)
+  spear-dash: false           # at the top of a launch, a dash across the gap; jabs going past
+  dash-chain: false           # launches and dashes strung together over a long approach
+  spear-macing: false         # launches from further out, the dash carrying it over them
+  wc-reset: false             # a smash that lands goes straight back up off a charge
+  wc-self-reset: false        # a charge under itself before a hard landing resets the fall
+  # -- anti-shield
+  stun-slam-variant: one-tick # one-tick | easy (mace on the next swing) | optimal (only from a fall)
+  ground-backstab: false      # past the shield, turn, mace their back
+  elytra-backstab: false      # an elytra dive comes down behind a raised shield
+  spear-stun-slam: false      # axe, then the spear's long jab
+  shield-drain: false         # a wind charge into someone turtling with no axe to answer
+  # -- finishers
+  detap-spear-mace: false     # low target: spear jab, then the mace as their hit protection ends
+  detap-breach: false         # a second breach swap as their hit protection ends
+  spear-double-pop: false     # a smash that pops a totem, then a spear jab for the next
+  wc-cancel: false            # a charge into an opponent going up for a smash
+  # -- rocket mace and elytra spear
+  rocket-mace: climb          # off | climb | spiral | angled | overhead
+  elytra-spear: false         # an elytra pass with the spear, jabbing on the way through
+  elytra-chain: true          # Wind Burst throws it up: elytra + one rocket back over them, smash again
+  # -- the pearl catch for mace-pearl-launch
+  pearl-catch: smart          # smart (recommended) | standard | instant | angle
+
+# ============================================================================
+#  Regearing.
+#
+#  Every step is played out by hand: the chest or box comes up in the hand,
+#  goes down with a swing and its sound, is opened (lid and all), emptied of
+#  what it is short of one stack at a time, closed, and mined - pickaxe out,
+#  the crack spreading over vanilla's break time for that tool - and the
+#  drop walked over and picked up. How quick each part is follows its skill.
+#
+#  Where from (a box it carries first - it is quicker):
+#   - a shulker box in its bag (shulker-regear): put down, restocked from,
+#     mined back up. No ender chest needed.
+#   - its ender chest (enderchest-regear, needs an ender chest in the bag):
+#     loose items in it are taken straight out; a shulker in it worth opening
+#     comes out, goes down, is restocked from, and goes back in the chest.
+#  It waits for room first (regear-distance, or out of sight). Caught mid-run
+#  it packs up in a hurry - nothing is left standing. It only takes what it
+#  is short of: 4 totems, 16 pearls, 8 gapples, a spare of each weapon, fresh
+#  armour for worn pieces, and leaves room for what it has to pick back up.
+#  Give it a pickaxe (silk touch for the chest, efficiency to be quick).
+#  Stock a bot's ender chest with /pvpbot view enderchest <bot>.
+# ============================================================================
+regear:
+  enderchest-regear: true
+  shulker-regear: true
+  regear-distance: 20.0
+  # Walk to a placed shulker box nearby and take what it is short of.
+  shulker-restock: false
+  # Mine an opponent's placed shulker box mid-resupply (needs a quick pickaxe); the box pops out whole.
+  shulker-steal: false
+# Where it looks is where it hits.
+aim:
+  # The swing lands where the crosshair is. The bot sees its target a moment late (the tracking knob),
+  # flicks and settles like a hand, and whiffs a juke made inside that moment. A whiff costs the
+  # meter. Off: the old "in reach, then a dice roll" hit.
+  aim-hits: true
+  # Where on the body it aims, percent of height from the feet - each bot a little higher or lower.
+  aim-height: 70
+# What it notices.
+senses:
+  # Degrees it sees across. Someone behind it is not seen until heard, or until they hit it.
+  # 360 = sees all round (the old way).
+  fov: 120
+  # Blocks it hears sprinting, fighting, totems, eating and pearls from (walking: half; crouching:
+  # nothing). It turns to look. 0 = deaf.
+  hearing: 16
+# How it fights, beyond how well.
+tactics:
+  # In a fight it uses its hotbar and off-hand only; anything in the bag means opening the
+  # inventory - standing still for a moment - and between fights it refills the hotbar the way the
+  # kit laid it out.
+  hotbar-only: true
+  # Weapons picked by the damage they do through your armour; heals timed by how fast it is losing
+  # health; backs off sooner when losing the trade, later when winning it.
+  damage-model: true
+  # Learns your habits in the fight: axes a shield player every time, crits a jump-resetter,
+  # follows your pearls, goes all in when you are low with no totem showing.
+  read-opponent: true
+  # Lowers its shield to a charged axe, goes all out the five seconds your shield is down, keeps
+  # out of reach while its own is.
+  shield-game: true
+  # Walks round to knock you toward the void, lava or a drop, and keeps its own back off edges.
+  edge-play: true
+  # UHC: lava at your feet (taken straight back) and fire under you. Changes blocks.
+  lava-play: false
+  # A couple of blocks between it and you while it heals. Changes blocks.
+  block-off: false
+# Items it uses when they are on its hotbar.
+items:
+  fishing-rod: true
+  trident: true
+  # Rockets with stars, loaded into a crossbow from the off-hand.
+  crossbow-ammo: true
+  # Weakness, Slowness, Harming and Poison splash potions, thrown at you.
+  throw-potions: true
+  # Holds use with a spear while running in - check it does something on your version first.
+  spear-charge: false
+  # Without water: a slime block, cobweb, powder snow or hay bale to break a fall.
+  block-clutch: true
+# For bots in a faction.
+team:
+  # Goes for the enemy its allies are on, and the weakest: low, armour broken, no totem.
+  focus-fire: true
+  # Leaves its own fight to hit whoever is on a nearly dead ally.
+  peel: true
+  # Throws its splash healing potions at a hurt ally close by.
+  heal-allies: true
+  # One member off regearing at a time.
+  regear-turns: true
+# The habits and rhythm of a person, not just their skill.
+human:
+  # Each bot has its own habits, from its name: how jumpy, how wide it strafes, the range it likes,
+  # rush or turtle, sprint-comboer or crit-hunter - and below skill 45, sometimes a spam-clicker.
+  personality: true
+  # Out of your reach while its meter refills and yours is full, back in as it fills; now and then it
+  # hovers at the edge of your reach to draw a swing.
+  spacing: true
+  # You swing and miss: it steps straight in for the free hit.
+  whiff-punish: true
+  # Fights in phases: pushes after landing two, backs off to reset after taking two.
+  tempo: true
+  # A gapple, potion or pearl is up in its hand a moment before it is used; now and then the wrong
+  # slot comes up first.
+  show-items: true
+  # At three hearts it locks in (steadier aim) or panics (shaky, jumpy, strafing all over).
+  panic: true
+  # After a kill: crouches over the body (some do), picks the good stuff out of the drop.
+  after-fight: true
+  # Standing about it looks round, glances at people, flicks its hotbar, hops, taps crouch.
+  idle-fidget: true
+# What gives a crowd of bots away.
+army:
+  # Orders, calls and new targets reach each bot after its own moment, nearest first.
+  reaction-ripple: true
+  # Most bots on one enemy; the rest take the next or wait at the edge (0 = no cap).
+  pile-cap: 3
+  # Each bot's skill sits up to this far above or below its faction's (0 = all identical).
+  skill-spread: 12
+  # Outnumbered and losing members, the less brave run; a leader close by holds them.
+  morale: true
+  # In an army: archers hang back, flankers come round the side, healers stay by the hurt.
+  roles: true
+  # Formations wobble, each bot keeps its own pace, turns ripple down the column.
+  loose-formations: true
+  # No arrows through allies, no sword sweep into them, no standing inside each other.
+  ally-care: true
+# Relative odds for /pvpbot randomplaystyle - they need not add up to 100.
+playstyle-weights:
+  default: 25
+  aggressive: 20
+  safe: 15
+  defensive: 15
+  balanced: 15
+  adaptive: 10
+
+# ============================================================================
+#  Global presets - the whole server's feel, switchable in one command.
+#
+#     /pvpbot preset            list them, and show which is active
+#     /pvpbot preset sweaty     apply one
+#     /pvpbot preset off        back to the values written above
+#     /pvpbot preset save <name>   snapshot what is in force right now
+#
+#  Layering is: the settings above, then the active preset, then a faction's
+#  own overrides. Factions therefore still win - a faction you have tuned by
+#  hand keeps its tuning when the server-wide preset changes.
+#
+#  Keys are the short names /pvpbot set uses; see /pvpbot settings for the
+#  full list. Anything a preset does not name is inherited from above.
+# ============================================================================
+active-preset: ''
+
+presets:
+  casual:
+    skill: 25
+    miss-chance: 30
+    mistake-chance: 35
+    attack-cooldown: 18
+    reaction-ticks: 60
+    crits: false
+    pearls: false
+    cobwebs: false
+  # Everything on, and sharp - but still a person: a player's reach, a real
+  # connection, the odd slip. Nothing a player could not do.
+  sweaty:
+    skill: 85
+    miss-chance: 3
+    mistake-chance: 5
+    attack-cooldown: 10
+    ping-millis: 25
+    reaction-ticks: 8
+    crits: true
+    shield-disable: true
+    buff-potions: true
+    cobwebs: true
+    mace-pearl-launch: true
+    attribute-swap: true
+    elytra-mace: true
+    cart-pvp: true
+  # Bots stay put and hit back, but never start anything - useful for building
+  # a scene, or for a training dummy that fights only when you swing first.
+  passive:
+    auto-target: false
+    wander: false
+    bot-vs-bot: false
+    revenge: true
+
+  # ---- video difficulties: /pvpbot preset easy|normal|hard|expert ----
+  # easy: a beginner: slow, misses a lot, no webs, pearls or shield breaking
+  easy:
+    skill: 15
+    aim: 15
+    reaction: 10
+    crit-timing: 10
+    technique: 10
+    tracking: 15
+    clutch: 10
+    shield-disable-speed: 10
+    shield-charge: 100
+    strafe: 8
+    reach-flips: 7
+    potion-gap: 3.5
+    cart-skip: 60
+    cart-cooldown: 160
+    elytra-mace-level: 1
+    stun-slam-chance: 10
+    miss-chance: 30
+    mistake-chance: 35
+    web-escape-delay: 30
+    drain-delay: 30
+    attack-cooldown: 16
+    crits: true
+    crit-chain: false
+    hit-select: false
+    jump-reset: false
+    mirror-punish: false
+    cobwebs: false
+    pearls: false
+    shield-disable: false
+    buff-potions: false
+    healing: old
+    combo-answers: false
+    read-opponent: false
+    shield-game: false
+    elytra-mace: false
+    mace-pearl-launch: false
+    cart-pvp: false
+  # normal: an average player: the basics (crits, jump resets, shield and axe, webs, pearls), few reads
+  normal:
+    skill: 40
+    aim: 40
+    reaction: 35
+    crit-timing: 35
+    technique: 35
+    tracking: 40
+    clutch: 35
+    shield-disable-speed: 35
+    shield-charge: 90
+    strafe: 15
+    reach-flips: 5
+    potion-gap: 2.5
+    cart-skip: 40
+    cart-cooldown: 120
+    elytra-mace-level: 2
+    stun-slam-chance: 30
+    miss-chance: 18
+    mistake-chance: 22
+    web-escape-delay: 20
+    drain-delay: 18
+    attack-cooldown: 12
+    crits: true
+    crit-chain: false
+    hit-select: false
+    jump-reset: true
+    mirror-punish: false
+    cobwebs: true
+    web-prediction: false
+    head-web: false
+    hit-web: false
+    pearls: true
+    shield-disable: true
+    shield-disable-chance: 60
+    buff-potions: true
+    healing: advanced
+    combo-answers: true
+    read-opponent: false
+    shield-game: true
+    elytra-mace: false
+    mace-pearl-launch: false
+    cart-pvp: false
+  # hard: a good player: hit select, crit chains, reads you, predicted and head webs, e-mace
+  hard:
+    skill: 60
+    aim: 60
+    reaction: 55
+    crit-timing: 60
+    technique: 55
+    tracking: 60
+    clutch: 60
+    shield-disable-speed: 60
+    shield-charge: 70
+    strafe: 22
+    reach-flips: 3
+    potion-gap: 2.0
+    cart-skip: 25
+    cart-cooldown: 90
+    elytra-mace-level: 3
+    stun-slam-chance: 55
+    miss-chance: 10
+    mistake-chance: 12
+    web-escape-delay: 12
+    drain-delay: 10
+    attack-cooldown: 12
+    crits: true
+    crit-chain: true
+    hit-select: true
+    jump-reset: true
+    mirror-punish: true
+    cobwebs: true
+    web-prediction: true
+    head-web: true
+    hit-web: false
+    pearls: true
+    shield-disable: true
+    shield-disable-chance: 75
+    buff-potions: true
+    healing: advanced
+    combo-answers: true
+    read-opponent: true
+    shield-game: true
+    damage-model: true
+    edge-play: true
+    elytra-mace: true
+    elytra-chain: false
+    mace-pearl-launch: true
+    attribute-swap: false
+    cart-pvp: false
+  # expert: a sweat: every trick on, hit-webs, d-taps, chained e-mace, cart PvP - a real 25 ms connection
+  expert:
+    skill: 75
+    aim: 75
+    reaction: 75
+    crit-timing: 75
+    technique: 75
+    tracking: 75
+    clutch: 80
+    shield-disable-speed: 80
+    shield-charge: 50
+    strafe: 30
+    reach-flips: 2
+    potion-gap: 1.5
+    cart-skip: 15
+    cart-cooldown: 70
+    elytra-mace-level: 4
+    stun-slam-chance: 75
+    miss-chance: 6
+    mistake-chance: 7
+    web-escape-delay: 8
+    drain-delay: 6
+    attack-cooldown: 12
+    crits: true
+    crit-chain: true
+    hit-select: true
+    jump-reset: true
+    mirror-punish: true
+    d-tap: true
+    whiff-punish: true
+    cobwebs: true
+    web-prediction: true
+    head-web: true
+    hit-web: true
+    pearls: true
+    shield-disable: true
+    shield-disable-chance: 90
+    buff-potions: true
+    healing: advanced
+    combo-answers: true
+    read-opponent: true
+    shield-game: true
+    damage-model: true
+    edge-play: true
+    elytra-mace: true
+    elytra-chain: true
+    mace-pearl-launch: true
+    attribute-swap: true
+    cart-pvp: true
+    ping-millis: 25
+# ============================================================================
+#  Bot skins.
+#
+#  A bot wears the skin of the Minecraft account that has its name - but most
+#  bot names are made up, so most bots came out in the default Steve/Alex skin.
+#  With random on, they wear a skin borrowed from the pool instead:
+#     missing - bots whose own name has no skin: generated names, name tables,
+#               made-up names. A bot named after a real account keeps its own.
+#     always  - every bot, whatever its name.
+#     off     - the default skins, as before.
+#  "/pvpbot spawn <name> <skinFrom>" still wears that account's skin. Only the
+#  skin is borrowed - the bot keeps its own name - and every bot keeps its skin
+#  across restarts.
+#
+#  The built-in pool is a few hundred ordinary players' names - common words
+#  and first names, nearly all taken, with all sorts of skins. Names still on a
+#  default skin are skipped, a skin two accounts share is used once, and a batch
+#  of bots goes through every skin before any repeats. The first start looks
+#  them up in the background (a minute or two, gently, to stay under Mojang's
+#  rate limit; the console says how many came through) and keeps them in
+#  skin-cache.yml, so later starts have them all at once, with no lookups.
+# ============================================================================
+skins:
+  random: missing
+  # The few hundred built-in names. Turn off to use only your own list below.
+  built-in-pool: true
+  # Your own additions: any real account names whose skins you want bots in.
+  pool: []
+
+# ============================================================================
+#  Named pools of bot names, for /pvpbot spawn names:<table> <count>
+#
+#  Picks that many names at random from the table below, skipping any already
+#  taken by a live bot or online player, and never using the same name twice
+#  in one spawn. If the table runs out of usable names it just spawns as many
+#  as it could and says so - it does not fall back to the generated names.
+# ============================================================================
+name-tables:
+  default:
+    - Alpha
+    - Bravo
+    - Charlie
+    - Delta
+    - Echo
+    - Foxtrot
+    - Golf
+    - Hotel
+  bandits:
+    - bandit1
+    - bandit2
+    - bandit3
+    - bandit4
+    - bandit5
+    - bandit6
+    - bandit7
+    - bandit8
+    - bandit9
+    - bandit10
+    - bandit11
+    - bandit12
+    - bandit13
+    - bandit14
+    - bandit15
+    - bandit16
+    - bandit17
+    - bandit18
+    - bandit19
+    - bandit20
+    - bandit21
+    - bandit22
+    - bandit23
+    - bandit24
+    - bandit25
+    - bandit26
+    - bandit27
+    - bandit28
+    - bandit29
+    - bandit30
+    - bandit31
+    - bandit32
+    - bandit33
+    - bandit34
+    - bandit35
+    - bandit36
+    - bandit37
+    - bandit38
+    - bandit39
+    - bandit40
+    - bandit41
+    - bandit42
+    - bandit43
+    - bandit44
+    - bandit45
+    - bandit46
+    - bandit47
+    - bandit48
+    - bandit49
+    - bandit50
+
+# ============================================================================
+#  Factions live in factions.yml, created via commands:
+#     /pvpbot faction create sweats
+#     /pvpbot faction join sweats <bot>
+#     /pvpbot faction hostile sweats rookies
+#
+#  Factions at peace leave each other alone - neither side's bots start a fight
+#  with the other's members, and blasts hold off them - but a member who is
+#  actually hit still hits back. Every real player is put in the "player"
+#  faction when they join, so this keeps a faction's bots off players:
+#     /pvpbot faction peace bandits player
+#
+#  Allied factions fight as one side while keeping their own settings:
+#     /pvpbot faction ally bandits elite_bandits
+#  ...so the two never target each other, revenge never fires between them and
+#  orbital strikes hold off rather than catching them in the blast - but the
+#  elites can still be a different calibre of opponent. That is the difference
+#  from simply putting everyone in one faction.
+#
+#  Each faction can override ANY setting above, so factions differ in skill.
+#  Anything not listed is inherited from this file (and from the active preset).
+#  Set them in-game with:
+#     /pvpbot faction set rookies miss-chance 45
+#     /pvpbot faction set rookies auto-potion false
+#
+#  ...which produces factions.yml entries like:
+#     factions:
+#       rookies:
+#         members: [Bot1, Bot2]
+#         enemies: [sweats]
+#         settings:
+#           miss-chance: 45
+#           auto-potion: false
+#           attack-cooldown: 20
+#       sweats:
+#         settings:
+#           miss-chance: 0
+#           attack-cooldown: 10
+#           melee-range: 3.5
+# ============================================================================

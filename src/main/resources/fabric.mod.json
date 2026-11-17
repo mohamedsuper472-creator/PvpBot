@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "pvpbot",
+  "version": "${version}",
+  "name": "PvpBot",
+  "description": "Human-like PvP bots - real fake players that aim, shield, crit, mace, regear, form armies and fight like players.",
+  "authors": ["stashes"],
+  "contact": { "sources": "https://github.com/Nantag/Plugins_Backup" },
+  "license": "All-Rights-Reserved",
+  "environment": "server",
+  "entrypoints": { "main": ["com.stashes.pvpbot.PvpBotMod"] },
+  "depends": { "fabricloader": ">=0.16.0", "minecraft": "1.21.11", "java": ">=21", "fabric-api": "*" }
+}
